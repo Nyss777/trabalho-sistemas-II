@@ -17,7 +17,7 @@ entity Memory is
     generic (
         DATA_WIDTH  : integer := 8;         -- Data bus width
         ADDR_WIDTH  : integer := 8;         -- Address bus width
-        IMAGE       : string := "UNUSED"    -- Memory content to be loaded    (text file)
+        IMAGE       : string := "keyStreamImage.txt"    -- Memory content to be loaded    (text file)
     );
     port (  
         clk         : in std_logic;
