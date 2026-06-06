@@ -45,10 +45,3 @@ architecture Estrutural of DataPath is
 begin
 
 end Estrutural;
-
-architecture Comportamental of DataPath is
-
-    -- Tem que usar o "RegisterNbits.vhd"
-begin
-
-end Comportamental;
