@@ -35,9 +35,8 @@ begin
     -- tudo isso considerando hexadecimal
     rst <= '1', '0' after 3 ns;
     clk <= not clk after 5 ns;
-    data <= "00000000", "00001010" after 7 ns, "00000101" after 11 ns, "00001010" after 15 ns;
-    data_av <= '0', '1' after 5 ns, '0' after 7 ns, '1' after 9 ns, '0' after 11 ns, '1' after 13 ns, '0' after 15 ns, '1' after 17 ns, '0' after 19 ns;    
-
+    data <= "00000000", "00001010" after 9 ns, "00000101" after 19 ns, "00001010" after 29 ns;
+    data_av <= '0', '1' after 4 ns, '0' after 9 ns, '1' after 14 ns, '0' after 19 ns, '1' after 24 ns, '0' after 29 ns, '1' after 34 ns, '0' after 39 ns;    
 end behavioral;
 
 
