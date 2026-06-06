@@ -1,4 +1,3 @@
--------------------------------------------------------------------------
 -- Nycolas, Breno, Estevão
 -------------------------------------------------------------------------
 
@@ -22,8 +21,8 @@ entity DataPath is
         A               : out std_logic_vector(ADDR_WIDTH-1 downto 0);                        -- Saída para índice da memória
         Data_out        : out std_logic_vector(DATA_WIDTH-1 downto 0);                        -- Saída para dado a ser escrito na memória
 
-        Data_in         : in std_logic_vector(DATA_WIDTH-1 downto 0)                          -- Entrada para dado lido da memória
-        Data               : in std_logic_vector(DATA_WIDTH-1 downto 0)                          -- Entrada para valor dado pelo usuário
+        Data_in         : in std_logic_vector(DATA_WIDTH-1 downto 0);                       -- Entrada para dado lido da memória
+        Data               : in std_logic_vector(DATA_WIDTH-1 downto 0);                          -- Entrada para valor dado pelo usuário
         en_i           : in std_logic;                     -- Sinal de controle para habilitar escrita dos registradores
         en_j              : in std_logic;
         en_k              : in std_logic;
@@ -34,7 +33,7 @@ entity DataPath is
         A_plus          : in std_logic;                        -- Controla qual valor vai para o somador
         B_plus          : in std_logic_vector(1 downto 0);     -- Controla qual valor vai para o somador
         rst_bd         : in std_logic;                     -- Sinal de reset para a Datapath
-        Dado           : in std_logic_vector(1 downto 0);  -- Sinal de controle para selecionar o dado a ser escrito nos registradores
+        Dado           : in std_logic_vector(1 downto 0)  -- Sinal de controle para selecionar o dado a ser escrito nos registradores
 	);
 end DataPath;
 
@@ -43,9 +42,13 @@ architecture Estrutural of DataPath is
     
     -- Tem que usar o "RegisterNbits.vhd"
         
+begin
+
 end Estrutural;
 
 architecture Comportamental of DataPath is
 
     -- Tem que usar o "RegisterNbits.vhd"
+begin
+
 end Comportamental;
