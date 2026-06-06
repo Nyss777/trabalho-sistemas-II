@@ -101,7 +101,7 @@ begin
 		
 end structural;
 
-architecture behavorial of GenerateKeyStream is  
+architecture behavioral of GenerateKeyStream is  
     
     -- Memory interface signals     
     signal mem_ce, mem_wr: std_logic;
@@ -148,4 +148,4 @@ begin
             data    => mem_data_out
         );
 		
-end behavorial;
+end behavioral;
