@@ -61,3 +61,102 @@ begin
     end process;
 
 end arch;
+
+
+library IEEE;                       
+use IEEE.std_logic_1164.all;        
+
+
+entity FullAdder is
+    port(
+        A, B, Ci    : in std_logic; 
+        S, Co       : out std_logic 
+    );
+end FullAdder;
+
+architecture arch2 of FullAdder is
+
+begin    
+    
+    -- Gera a soma (S)
+    S <= (A xor B) xor Ci;
+    
+    -- Gera carry out (Co)
+    Co <= (A and B) or ((A xor B) and Ci);    
+    
+end arch2;
+
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity modulo is   
+    generic (
+        DATA_WIDTH  : integer := 8;
+        ADDR_WIDTH  : integer := 8
+    ); 
+    port (
+        clk              : in std_logic;
+        rst              : in std_logic;
+        modulo           : in std_logic;
+        k                : in std_logic_vector(DATA_WIDTH-1 downto 0);
+        mux_upper        : in std_logic_vector(DATA_WIDTH-1 downto 0);
+        AdderB           : in std_logic;
+        mux_lower        : out std_logic;
+        kMenorTextSize   : out std_logic;
+        moduloPronto     : out std_logic
+    );
+end modulo;
+
+architecture arch of modulo is 
+
+    signal mux_upperleft : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal mux_upperright : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal mux_middle : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal AdderA, AdderOut : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal AdderCo : std_logic;
+    signal FlipD : std_logic;
+    signal registerOut: std_logic_vector(DATA_WIDTH-1 downto 0);
+
+begin
+
+    FULLADDER: entity work.FullAdder
+        port map (
+            A  => AdderA,
+            B  => AdderB,
+            S  => AdderOut, 
+            Ci => '0',
+            Co => AdderCo
+        );
+
+    MODREGISTER: entity work.RegisterNbits
+        port map (
+            clock => clk,
+            reset => rst,
+            d     => mux_upperleft,
+            q     => registerOut,
+            ce    => '1'
+        );
+
+    kMenorTextSize <= AdderCo;
+    moduloPronto <= '1' when (AdderCo = '1' and FlipD = '1') else '0';
+    mux_upperleft <= mux_upperright when (AdderCo = '0') else mux_upper;
+    mux_middle <= k when (modulo= '0') else registerOut;
+    mux_upperright <= AdderOut when (AdderCo = '0') else registerOut;
+    AdderA <= mux_middle;
+
+    mux_lower <= mux_upperleft;
+
+    process(clk, rst)
+    begin
+
+        if rst = '1' then
+            FlipD <= '0';
+        
+        elsif rising_edge(clk) then
+            FlipD <= modulo;
+
+        end if;
+    end process;
+
+end arch;
