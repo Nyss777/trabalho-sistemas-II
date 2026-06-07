@@ -40,20 +40,19 @@ entity DataPath is
 end DataPath;
 
 
-architecture Estrutural of DataPath is
-
+architecture structural of DataPath is
     signal data_index, data_index_next : STD_LOGIC_VECTOR(1 downto 0);
-    signal av_decoder_out              : STD_LOGIC_VECTOR(3 downto 0);
-    signal state_out, state_size_out, text_size_out, key_stream_out : std_logic_vector(ADDR_WIDTH-1 downto 0);
-    signal data_mux                    : std_logic_vector(DATA_WIDTH-1 downto 0);
-    signal reg_i_out, reg_j_out, reg_k_out, reg_t_out  : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal av_decoder_out : STD_LOGIC_VECTOR(3 downto 0);
 
     signal ce_state, ce_state_size, ce_text_size, ce_key_stream : std_logic;
+    signal state_out, state_size_out, text_size_out, key_stream_out : STD_LOGIC_VECTOR(DATA_WIDTH-1 downto 0);
 
-    signal memory_addr_base, memory_addr_index : std_logic_vector(ADDR_WIDTH-1 downto 0);
+    signal data_mux, mux_upper_right_result : STD_LOGIC_VECTOR(DATA_WIDTH-1 downto 0);
+    signal reg_i_out, reg_j_out, reg_k_out, reg_t_out : STD_LOGIC_VECTOR(DATA_WIDTH-1 downto 0);
 
+
+    signal memory_addr_base, memory_addr_index : STD_LOGIC_VECTOR(ADDR_WIDTH-1 downto 0);
 begin
-
     data_index_next <= data_index + "01";
 
     av_atual : entity work.RegisterNbits(behavioral)
@@ -61,9 +60,9 @@ begin
         port map (
             clock => clk,
             reset => rst,
-            d   => data_index_next,
-            q   => data_index,
-            ce  => data_av
+            d     => data_index_next,
+            q     => data_index,
+            ce    => data_av
         );
 
     with data_index select
@@ -71,12 +70,6 @@ begin
                           "0010" when "01",
                           "0100" when "10",
                           "1000" when "11";
-
-    data_decoder : entity work.Decoder_2to4(behavioral)
-         port map (
-            A => data_index,
-            Y => av_decoder_out
-         );
 
     ce_state      <= av_decoder_out(0) and data_av and rst_bd;
     ce_state_size <= av_decoder_out(1) and data_av and rst_bd;
@@ -88,9 +81,9 @@ begin
         port map (
             clock => clk,
             reset => rst,
-            d   => Data,
-            q   => state_out,
-            ce  => ce_state
+            d     => Data,
+            q     => state_out,
+            ce    => ce_state
         );
 
     state_size : entity work.RegisterNbits(behavioral)
@@ -98,9 +91,9 @@ begin
         port map (
             clock => clk,
             reset => rst,
-            d   => Data,
-            q   => state_size_out,
-            ce  => ce_state_size
+            d     => Data,
+            q     => state_size_out,
+            ce    => ce_state_size
         );
 
     text_size : entity work.RegisterNbits(behavioral)
@@ -108,25 +101,44 @@ begin
         port map (
             clock => clk,
             reset => rst,
-            d   => Data,
-            q   => text_size_out,
-            ce  => ce_text_size
-        );
+            d     => Data,
+            q     => text_size_out,
+            );
+            ce    => ce_text_size
 
     key_stream : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => ADDR_WIDTH)
         port map (
             clock => clk,
             reset => rst,
-            d   => Data,
-            q   => key_stream_out,
-            ce  => ce_key_stream
+            d     => Data,
+            q     => key_stream_out,
+            ce    => ce_key_stream
         );
 
     data_ok <= '1' when data_index = "11" else '0';
 
+    mod_adder_b_mux <= text_size_out when AcionarMod = '1' else state_size_out;
+
+    modulo : entity work.Modulo(arch)
+        generic map(
+            DATA_WIDTH => DATA_WIDTH
+            ADDR_WIDTH => ADDR_WIDTH
+        )
+        port map (
+            clk              => clk,
+            rst              => rst_bd,
+            modulo           => AcionarMod,
+            k                => reg_k_out,
+            mux_upper_left_b => TO_BE_ADDED,
+            AdderB           => mod_adder_b_mux,
+            mux_upper_right  => mux_upper_right_result
+            kMenorTextSize   => kMenorTextSize,
+            modPronto        => modPronto
+        );
+
     with Dado select
-        data_mux <= TO_BE_ADDED when "00",
+        data_mux <= mux_upper_right_result when "00",
                     reg_t_out when "01",
                     Data_in when "10",
                     TO_BE_ADDED when "11";
@@ -136,9 +148,9 @@ begin
         port map (
             clock => clk,
             reset => rst_bd,
-            d   => data_mux,
-            q   => reg_i_out,
-            ce  => en_i
+            d     => data_mux,
+            q     => reg_i_out,
+            ce    => en_i
         );
 
     req_j : entity work.RegisterNbits(behavioral)
@@ -146,9 +158,9 @@ begin
         port map (
             clock => clk,
             reset => rst_bd,
-            d   => data_mux,
-            q   => reg_j_out,
-            ce  => en_j
+            d     => data_mux,
+            q     => reg_j_out,
+            ce    => en_j
         );
 
     req_k : entity work.RegisterNbits(behavioral)
@@ -156,9 +168,9 @@ begin
         port map (
             clock => clk,
             reset => rst_bd,
-            d   => data_mux,
-            q   => reg_k_out,
-            ce  => en_k
+            d     => data_mux,
+            q     => reg_k_out,
+            ce    => en_k
         );
 
     req_t : entity work.RegisterNbits(behavioral)
@@ -166,9 +178,9 @@ begin
         port map (
             clock => clk,
             reset => rst_bd,
-            d   => data_mux,
-            q   => reg_t_out,
-            ce  => en_t
+            d     => data_mux,
+            q     => reg_t_out,
+            ce    => en_t
         );
 
     memory_addr_base <= state_out when vetor = '0' else key_stream_out;
@@ -180,4 +192,4 @@ begin
 
     A <= memory_addr_base + memory_addr_index;
 
-end Estrutural;
+end structural;

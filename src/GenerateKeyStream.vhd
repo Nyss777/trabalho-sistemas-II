@@ -53,7 +53,7 @@ begin
             done        => done
     );
 
-	DATA_PATH: entity work.DataPath(Estrutural)
+	DATA_PATH: entity work.DataPath(structural)
 		generic map (
 			DATA_WIDTH	=> DATA_WIDTH,
             ADDR_WIDTH  => ADDR_WIDTH
