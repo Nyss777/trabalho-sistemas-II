@@ -6,7 +6,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.all;
 
-entity GenerateKeyStream  is
+entity GenerateKeyStream is
 	generic(
 		ADDR_WIDTH	: integer := 8;
         DATA_WIDTH  : integer := 8
@@ -53,7 +53,7 @@ begin
             done        => done
     );
 
-	DATA_PATH: entity work.DataPath
+	DATA_PATH: entity work.DataPath(Estrutural)
 		generic map (
 			DATA_WIDTH	=> DATA_WIDTH,
             ADDR_WIDTH  => ADDR_WIDTH

@@ -44,114 +44,78 @@ architecture Estrutural of DataPath is
 
     signal data_index, data_index_next : STD_LOGIC_VECTOR(1 downto 0);
     signal av_decoder_out              : STD_LOGIC_VECTOR(3 downto 0);
+    signal state_out, state_size_out, text_size_out, key_stream_out : std_logic_vector(ADDR_WIDTH-1 downto 0);
     signal dado_mux                    : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal reg_i_out, reg_j_out, reg_k_out, reg_t_out  : std_logic_vector(DATA_WIDTH-1 downto 0);
+
+    signal ce_state, ce_state_size, ce_text_size, ce_key_stream : std_logic;
 
 begin
 
     data_index_next <= data_index + "01";
 
-    -- with Dado select
-    --     dado_mux <= open    when "00",
-    --                 open    when "01",
-    --                 open    when "10",
-    --                 open    when others;
-
     av_atual : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => 2)
         port map (
             clock => clk,
-            reset => rst_bd,
+            reset => rst,
             d   => data_index_next,
             q   => data_index,
             ce  => data_av
         );
 
     data_decoder : entity work.Decoder_2to4(behavioral)
-        port map (
+         port map (
             A => data_index,
             Y => av_decoder_out
-        );
+         );
 
-    state : entity work.RegisterNbits(Comportamental)
+    ce_state      <= av_decoder_out(0) and data_av and rst_bd;
+    ce_state_size <= av_decoder_out(1) and data_av and rst_bd;
+    ce_text_size  <= av_decoder_out(2) and data_av and rst_bd;
+    ce_key_stream <= av_decoder_out(3) and data_av and rst_bd;
+
+    state : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => ADDR_WIDTH)
         port map (
             clock => clk,
-            reset => rst_bd,
+            reset => rst,
             d   => Data,
-            -- q   => open,
-            ce  => av_decoder_out(0)
+            q   => state_out,
+            ce  => ce_state
         );
 
-    state_size : entity work.RegisterNbits(Comportamental)
+    state_size : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => ADDR_WIDTH)
         port map (
             clock => clk,
-            reset => rst_bd,
+            reset => rst,
             d   => Data,
-            -- q   => open,
-            ce  => av_decoder_out(1)
+            q   => state_size_out,
+            ce  => ce_state_size
         );
 
-    text_size : entity work.RegisterNbits(Comportamental)
+    text_size : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => ADDR_WIDTH)
         port map (
             clock => clk,
-            reset => rst_bd,
+            reset => rst,
             d   => Data,
-            -- q   => open,
-            ce  => av_decoder_out(2)
+            q   => text_size_out,
+            ce  => ce_text_size
         );
 
-    key_stream : entity work.RegisterNbits(Comportamental)
+    key_stream : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => ADDR_WIDTH)
         port map (
             clock => clk,
-            reset => rst_bd,
+            reset => rst,
             d   => Data,
-            -- q   => open,
-            ce  => av_decoder_out(3)
+            q   => key_stream_out,
+            ce  => ce_key_stream
         );
 
-    -- reg_i_inst : entity work.RegisterNbits(behavioral)
-    --     generic map (n => DATA_WIDTH)
-    --     port map (
-    --         clk => clk,
-    --         rst => rst_bd,
-    --         d   => dado_mux,
-    --         q   => reg_i_out,
-    --         ce  => en_i
-    --     );
-
-    -- reg_j_inst : entity work.RegisterNbits(behavioral)
-    --     generic map (n => DATA_WIDTH)
-    --     port map (
-    --         clk => clk,
-    --         rst => rst_bd,
-    --         d   => dado_mux,
-    --         q   => reg_j_out,
-    --         ce  => en_j
-    --     );
-
-    -- reg_k_inst : entity work.RegisterNbits(behavioral)
-    --     generic map (n => DATA_WIDTH)
-    --     port map (
-    --         clk => clk,
-    --         rst => rst_bd,
-    --         d   => dado_mux,
-    --         q   => reg_k_out,
-    --         ce  => en_k
-    --     );
-
-    -- reg_t_inst : entity work.RegisterNbits(behavioral)
-    --     generic map (n => DATA_WIDTH)
-    --     port map (
-    --         clk => clk,
-    --         rst => rst_bd,
-    --         d   => dado_mux,
-    --         q   => reg_t_out,
-    --         ce  => en_t
-    --     );
+    data_ok <= '1' when data_index = "11" else '0';
 
 end Estrutural;
 
