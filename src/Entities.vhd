@@ -118,20 +118,21 @@ architecture arch of modulo is
     signal mux_upperleft : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal mux_upperright : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal mux_middle : std_logic_vector(DATA_WIDTH-1 downto 0);
-    signal AdderA, AdderOut : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal AdderA, AdderB_neg, AdderOut : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal AdderCo : std_logic;
     signal FlipD : std_logic;
     signal registerOut: std_logic_vector(DATA_WIDTH-1 downto 0);
 
 begin
 
+    AdderB_neg <= not AdderB;
+
     FULLADDER: entity work.FullAdder
-        generic map (WIDTH => DATA_WIDTH)
         port map (
             A  => AdderA,
-            B  => AdderB,
+            B  => AdderB_neg,
+            Ci => '1',
             S  => AdderOut,
-            Ci => '0',
             Co => AdderCo
         );
 
@@ -145,7 +146,7 @@ begin
             ce    => '1'
         );
 
-    kMenorTextSize <= AdderCo;
+    kMenorTextSize <= not AdderCo;
     modPronto <= '1' when (AdderCo = '1' and FlipD = '1') else '0';
     mux_upperleft <= mux_upperright when (AdderCo = '0') else mux_upper_left_b;
     mux_middle <= k when (modulo= '0') else registerOut;
