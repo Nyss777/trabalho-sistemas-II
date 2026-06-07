@@ -31,7 +31,7 @@ begin
       
     -- na memória deve estar 
     -- 00 06 01 04 09 03 08 07 05 02
-    -- espera-se que a saída seja 00 06 01 04 09 03 08 07 05 02 09 05 07 02 04
+    -- espera-se que a saída seja 09 04 07 03 00 08 06 01 05 02 09 05 07 02 04
     -- tudo isso considerando hexadecimal
     rst <= '1', '0' after 3 ns;
     clk <= not clk after 5 ns;
