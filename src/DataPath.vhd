@@ -5,6 +5,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use ieee.std_logic_unsigned.all; 	-- CONV_INTEGER function
+use IEEE.numeric_std.all;
 
 
 entity DataPath is
@@ -50,8 +51,10 @@ architecture structural of DataPath is
     signal data_mux, mux_upper_right_result : STD_LOGIC_VECTOR(DATA_WIDTH-1 downto 0);
     signal reg_i_out, reg_j_out, reg_k_out, reg_t_out : STD_LOGIC_VECTOR(DATA_WIDTH-1 downto 0);
 
-
+    signal mod_adder_b_mux : STD_LOGIC_VECTOR(DATA_WIDTH-1 downto 0);
     signal memory_addr_base, memory_addr_index : STD_LOGIC_VECTOR(ADDR_WIDTH-1 downto 0);
+
+    signal adder_a, adder_b, adder_result : STD_LOGIC_VECTOR(DATA_WIDTH-1 downto 0);
 begin
     data_index_next <= data_index + "01";
 
@@ -69,7 +72,8 @@ begin
         av_decoder_out <= "0001" when "00",
                           "0010" when "01",
                           "0100" when "10",
-                          "1000" when "11";
+                          "1000" when "11",
+                          (others => '0') when others;
 
     ce_state      <= av_decoder_out(0) and data_av and rst_bd;
     ce_state_size <= av_decoder_out(1) and data_av and rst_bd;
@@ -122,7 +126,7 @@ begin
 
     modulo : entity work.Modulo(arch)
         generic map(
-            DATA_WIDTH => DATA_WIDTH
+            DATA_WIDTH => DATA_WIDTH,
             ADDR_WIDTH => ADDR_WIDTH
         )
         port map (
@@ -130,18 +134,21 @@ begin
             rst              => rst_bd,
             modulo           => AcionarMod,
             k                => reg_k_out,
-            mux_upper_left_b => TO_BE_ADDED,
+            mux_upper_left_b => adder_result,
             AdderB           => mod_adder_b_mux,
-            mux_upper_right  => mux_upper_right_result
+            mux_upper_right  => mux_upper_right_result,
             kMenorTextSize   => kMenorTextSize,
             modPronto        => modPronto
         );
 
     with Dado select
-        data_mux <= mux_upper_right_result when "00",
+        data_mux <= adder_result when "00",
                     reg_t_out when "01",
                     Data_in when "10",
-                    TO_BE_ADDED when "11";
+                    mux_upper_right_result when "11",
+                    (others => '0') when others;
+
+    Data_out <= data_mux;
 
     req_i : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => DATA_WIDTH)
@@ -188,8 +195,19 @@ begin
         memory_addr_index <= reg_i_out when "00",
                              reg_j_out when "01",
                              reg_k_out when "10",
-                             reg_t_out when "11";
+                             reg_t_out when "11",
+                             (others => '0') when others;
 
     A <= memory_addr_base + memory_addr_index;
+
+    adder_a <= std_logic_vector(to_unsigned(1, DATA_WIDTH)) when A_plus = '0' else Data_in;
+    with B_plus select
+        adder_b <= reg_i_out when "00",
+                   reg_j_out when "01",
+                   reg_t_out when "10",
+                   reg_k_out when "11",
+                   (others => '0') when others;
+
+    adder_result <= adder_a + adder_b;
 
 end structural;

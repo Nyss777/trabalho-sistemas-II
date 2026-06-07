@@ -126,6 +126,7 @@ architecture arch of modulo is
 begin
 
     FULLADDER: entity work.FullAdder
+        generic map (WIDTH => DATA_WIDTH)
         port map (
             A  => AdderA,
             B  => AdderB,
@@ -135,6 +136,7 @@ begin
         );
 
     MODREGISTER: entity work.RegisterNbits
+        generic map (WIDTH => DATA_WIDTH)
         port map (
             clock => clk,
             reset => rst,
