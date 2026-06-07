@@ -103,8 +103,8 @@ begin
             reset => rst,
             d     => Data,
             q     => text_size_out,
-            );
             ce    => ce_text_size
+        );
 
     key_stream : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => ADDR_WIDTH)
