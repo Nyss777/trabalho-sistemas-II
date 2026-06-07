@@ -61,3 +61,93 @@ begin
     end process;
 
 end arch;
+
+
+library IEEE;                       
+use IEEE.std_logic_1164.all;        
+
+
+entity FullAdder is
+    port(
+        A, B, Ci    : in std_logic; 
+        S, Co       : out std_logic 
+    );
+end FullAdder;
+
+architecture arch2 of FullAdder is
+
+begin    
+    
+    -- Gera a soma (S)
+    S <= (A xor B) xor Ci;
+    
+    -- Gera carry out (Co)
+    Co <= (A and B) or ((A xor B) and Ci);    
+    
+end arch2;
+
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity modulo is 
+    port (
+        clk              : in std_logic;
+        rst              : in std_logic;
+        modulo           : in std_logic;
+        k                : in std_logic;
+        mux_upper        : in std_logic;
+        AdderB           : in std_logic;
+        mux_lower        : out std_logic;
+        kMenorTextSize   : out std_logic;
+        moduloPronto     : out std_logic;
+    );
+end modulo;
+
+architecture arch of modulo is 
+
+    signal mux_upperleft, mux_upperright, mux_middle : std_logic;
+    signal AdderA, AdderOut, AdderCo : std_logic;
+    signal FlipD : std_logic;
+    signal registerOut: std_logic;
+
+begin
+
+    FULLADDER: entity work.FullAdder
+        port map (
+            A  => AdderA,
+            B  => AdderB,
+            S  => AdderOut, 
+            Co => AdderCo,
+        );
+
+    REGISTER: entity work.RegisterNbits
+        port map (
+            clock => clk,
+            reset => rst,
+            d   => mux_upperleft,
+            q   => registerOut,
+            ce  => '1',
+        );
+
+    kMenorTextSize <= Co;
+    moduloPronto <= '1' when (AdderCo = '1' and FlipD = '1') else '0';
+    mux_upperleft <= mux_upperright when (AdderCo = '0') else mux_upper;
+    mux_middle <= k when (modulo= '0') else registerOut;
+    mux_upperright <= AdderOut when (AdderCo = '0') else registerOut;
+
+    mux_lower <= mux_upperleft;
+
+    process(clk, rst)
+    begin
+
+        if rst = '1' then
+            FlipD = '0';
+        
+        elsif rising_edge(clk) then
+            FlipD <= modulo
+
+        end if;
+    end process;
+
+end arch;
