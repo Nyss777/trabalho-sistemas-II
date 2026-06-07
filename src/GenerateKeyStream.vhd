@@ -121,9 +121,8 @@ begin
 			clk		        => clk,
 			rst		        => rst,
             data_av         => data_av,
-            srcAddr         => (others => '0'),
             done            => done,
-            data_in         => data,
+            data            => data,
             
             -- Memory interface
             mem_ce          => mem_ce,

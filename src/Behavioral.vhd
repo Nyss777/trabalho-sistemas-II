@@ -10,10 +10,9 @@ entity Behavioral is
     port (  
         clk              : in std_logic;
         rst              : in std_logic;
-        srcAddr          : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+        data             : in std_logic_vector(DATA_WIDTH -1 downto 0);
         data_av          : in std_logic; 
-        data_in          : in std_logic_vector(DATA_WIDTH - 1 downto 0);
-        data_out         : out std_logic_vector(DATA_WIDTH - 1 downto 0);
+        data_ok          : out std_logic; 
         done             : out std_logic;
         
         -- Memory interface
@@ -29,18 +28,16 @@ architecture Behav of Behavioral is
 
     type State is (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12);
     signal currentState : State;
-    signal nextState : State;
     
     -- Datapath signals
     type DataAv is (D0, D1, D2, D3);
     signal dv : DataAv;
 
-    signal data_ok : std_logic; 
-
     signal i, j, k, t : unsigned(ADDR_WIDTH - 1 downto 0);
+    signal state_addr : std_logic_vector(DATA_WIDTH - 1 downto 0);
     signal state_size : unsigned(ADDR_WIDTH - 1 downto 0);
     signal temp_data : std_logic_vector(DATA_WIDTH - 1 downto 0);
-    signal keystream_addr : unsigned(ADDR_WIDTH - 1 downto 0);
+    signal keystream_addr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
     
     -- Helper function for modulo operation
     function mod_operation(value : unsigned; divisor : unsigned) return unsigned is
@@ -53,8 +50,6 @@ architecture Behav of Behavioral is
     end function;
 
 begin
-
-    keystream_addr <= k;
     
     -- Memory control logic: set address and data based on current state
     mem_addr <= std_logic_vector(i) when (currentState = S3 or currentState = S4 or 
@@ -74,7 +69,7 @@ begin
                    (others => '0');
     
     -- Output the keystream byte
-    data_out <= mem_data_out when currentState = S11 else (others => '0');
+    -- data_out <= mem_data_out when currentState = S11 else (others => '0');
     
     -- Done signal
     done <= '1' when (currentState = S1 and k >= state_size) else '0';
@@ -90,36 +85,28 @@ begin
             t <= (others => '0');
             temp_data <= (others => '0');
             dv <= D0;
-            data_ok <= '0';
             
         elsif rising_edge(clk) then
             
             case currentState is
             
                 when S0 =>
-                    -- Initialize indices
-                    i <= unsigned(srcAddr);
-                    j <= unsigned(srcAddr);
-                    k <= (others => '0');
-                    t <= (others => '0');
-
+                    
                     if data_av = '1' then
                         case dv is
                             when D0 =>
+                                state_addr <= data;
                                 dv <= D1;
                             when D1 =>
-                                state_size <= unsigned(data_in);
+                                state_size <= unsigned(data);
                                 dv <= D2;
                             when D2 =>
                                 dv <= D3;
                             when D3 =>
+                                keystream_addr <= data;
                                 data_ok <= '1';
+                                currentState <= S1;
                         end case;
-                    end if;
-
-                    if data_ok = '1' then
-                        currentState <= S1;
-                        data_ok <= '0';
                     end if;
 
                 when S1 => 
