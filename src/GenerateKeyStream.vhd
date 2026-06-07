@@ -104,7 +104,7 @@ begin
         end if;
     end process;
 
-    -- Sinal de controle da memória: inverter ld (0 leitura, 1 escrita)
+    -- Sinal de controle da memória: inverter ld porque o rw é oposto (para rw 0 leitura, 1 escrita)
     rw_signal <= not ld;
     D_memory <= Data_out when ld = '0' else (others => 'Z');
 		
