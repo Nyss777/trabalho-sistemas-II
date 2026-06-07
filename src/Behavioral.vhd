@@ -11,8 +11,8 @@ entity Behavioral is
         clk              : in std_logic;
         rst              : in std_logic;
         srcAddr          : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        stateSize        : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        data_ok          : in std_logic;  -- Changed to INPUT
+        data_av          : in std_logic; 
+        data_in          : in std_logic_vector(DATA_WIDTH - 1 downto 0);
         data_out         : out std_logic_vector(DATA_WIDTH - 1 downto 0);
         done             : out std_logic;
         
@@ -32,6 +32,11 @@ architecture Behav of Behavioral is
     signal nextState : State;
     
     -- Datapath signals
+    type DataAv is (D0, D1, D2, D3);
+    signal dv : DataAv;
+
+    signal data_ok : std_logic; 
+
     signal i, j, k, t : unsigned(ADDR_WIDTH - 1 downto 0);
     signal state_size : unsigned(ADDR_WIDTH - 1 downto 0);
     signal temp_data : std_logic_vector(DATA_WIDTH - 1 downto 0);
@@ -49,8 +54,6 @@ architecture Behav of Behavioral is
 
 begin
 
-    -- Convert stateSize to unsigned
-    state_size <= unsigned(stateSize);
     keystream_addr <= k;
     
     -- Memory control logic: set address and data based on current state
@@ -74,7 +77,7 @@ begin
     data_out <= mem_data_out when currentState = S11 else (others => '0');
     
     -- Done signal
-    done <= '1' when (currentState = S12 and k >= state_size) else '0';
+    done <= '1' when (currentState = S1 and k >= state_size) else '0';
 
     -- Sequential process for state transitions
     process(clk, rst)
@@ -86,6 +89,8 @@ begin
             k <= (others => '0');
             t <= (others => '0');
             temp_data <= (others => '0');
+            dv <= D0;
+            data_ok <= '0';
             
         elsif rising_edge(clk) then
             
@@ -97,9 +102,24 @@ begin
                     j <= unsigned(srcAddr);
                     k <= (others => '0');
                     t <= (others => '0');
-                    
+
+                    if data_av = '1' then
+                        case dv is
+                            when D0 =>
+                                dv <= D1;
+                            when D1 =>
+                                state_size <= unsigned(data_in);
+                                dv <= D2;
+                            when D2 =>
+                                dv <= D3;
+                            when D3 =>
+                                data_ok <= '1';
+                        end case;
+                    end if;
+
                     if data_ok = '1' then
                         currentState <= S1;
+                        data_ok <= '0';
                     end if;
 
                 when S1 => 
@@ -107,7 +127,7 @@ begin
                     if k < state_size then
                         currentState <= S2;
                     else
-                        currentState <= S1;
+                        currentState <= S0;
                     end if;
 
                 when S2 => 

@@ -120,10 +120,10 @@ begin
 		port map (
 			clk		        => clk,
 			rst		        => rst,
-            data_ok         => data_av,
+            data_av         => data_av,
             srcAddr         => (others => '0'),
-            stateSize       => stateSize_value,
             done            => done,
+            data_in         => data,
             
             -- Memory interface
             mem_ce          => mem_ce,
