@@ -45,10 +45,12 @@ architecture Estrutural of DataPath is
     signal data_index, data_index_next : STD_LOGIC_VECTOR(1 downto 0);
     signal av_decoder_out              : STD_LOGIC_VECTOR(3 downto 0);
     signal state_out, state_size_out, text_size_out, key_stream_out : std_logic_vector(ADDR_WIDTH-1 downto 0);
-    signal dado_mux                    : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal data_mux                    : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal reg_i_out, reg_j_out, reg_k_out, reg_t_out  : std_logic_vector(DATA_WIDTH-1 downto 0);
 
     signal ce_state, ce_state_size, ce_text_size, ce_key_stream : std_logic;
+
+    signal memory_addr_base, memory_addr_index : std_logic_vector(ADDR_WIDTH-1 downto 0);
 
 begin
 
@@ -63,6 +65,12 @@ begin
             q   => data_index,
             ce  => data_av
         );
+
+    with data_index select
+        av_decoder_out <= "0001" when "00",
+                          "0010" when "01",
+                          "0100" when "10",
+                          "1000" when "11";
 
     data_decoder : entity work.Decoder_2to4(behavioral)
          port map (
@@ -117,12 +125,59 @@ begin
 
     data_ok <= '1' when data_index = "11" else '0';
 
+    with Dado select
+        data_mux <= TO_BE_ADDED when "00",
+                    reg_t_out when "01",
+                    Data_in when "10",
+                    TO_BE_ADDED when "11";
+
+    req_i : entity work.RegisterNbits(behavioral)
+        generic map (WIDTH => DATA_WIDTH)
+        port map (
+            clock => clk,
+            reset => rst_bd,
+            d   => data_mux,
+            q   => reg_i_out,
+            ce  => en_i
+        );
+
+    req_j : entity work.RegisterNbits(behavioral)
+        generic map (WIDTH => DATA_WIDTH)
+        port map (
+            clock => clk,
+            reset => rst_bd,
+            d   => data_mux,
+            q   => reg_j_out,
+            ce  => en_j
+        );
+
+    req_k : entity work.RegisterNbits(behavioral)
+        generic map (WIDTH => DATA_WIDTH)
+        port map (
+            clock => clk,
+            reset => rst_bd,
+            d   => data_mux,
+            q   => reg_k_out,
+            ce  => en_k
+        );
+
+    req_t : entity work.RegisterNbits(behavioral)
+        generic map (WIDTH => DATA_WIDTH)
+        port map (
+            clock => clk,
+            reset => rst_bd,
+            d   => data_mux,
+            q   => reg_t_out,
+            ce  => en_t
+        );
+
+    memory_addr_base <= state_out when vetor = '0' else key_stream_out;
+    with indice select
+        memory_addr_index <= reg_i_out when "00",
+                             reg_j_out when "01",
+                             reg_k_out when "10",
+                             reg_t_out when "11";
+
+    A <= memory_addr_base + memory_addr_index;
+
 end Estrutural;
-
-
-architecture Comportamental of DataPath is
-
-    -- Tem que usar o "RegisterNbits.vhd"
-begin
-
-end Comportamental;
