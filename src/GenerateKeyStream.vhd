@@ -94,10 +94,19 @@ begin
             address => A,
             data => D_memory
         );
-    
+       -- Registrador para segurar o valor lido na última leitura
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if ld = '1' then
+                Data_in <= D_memory;
+            end if;
+        end if;
+    end process;
+
     -- Sinal de controle da memória: inverter ld (0 leitura, 1 escrita)
     rw_signal <= not ld;
-    D_memory <= Data_in when ld = '1' else Data_out;
+    D_memory <= Data_out when ld = '0' else (others => 'Z');
 		
 end structural;
 
