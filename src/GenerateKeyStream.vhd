@@ -130,7 +130,6 @@ architecture behavioral of GenerateKeyStream is
     signal text_size : std_logic_vector(DATA_WIDTH - 1 downto 0);
     signal ValorMod : std_logic_vector(DATA_WIDTH - 1 downto 0);
     signal keystream_addr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
-    signal data_ok : std_logic;
     
 begin
     
@@ -180,7 +179,6 @@ begin
                                 dv <= D3;
                             when D3 =>
                                 keystream_addr <= data;
-                                data_ok <= '1';
                                 currentState <= S1;
                         end case;
                     end if;
