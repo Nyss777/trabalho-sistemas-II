@@ -1,6 +1,6 @@
 Vai no modelsim e Compile,
 
-Compila a memória primeiro depois o resto,
+Compila UtilPackage primeiro, depois Memory, aí o resto,
 
 Coloca o arquivo keyStreamImage.txt em ModelSim\modelsim_ase\win32aloem
 
