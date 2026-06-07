@@ -130,6 +130,7 @@ architecture behavioral of GenerateKeyStream is
     signal text_size : std_logic_vector(DATA_WIDTH - 1 downto 0);
     signal ValorMod : std_logic_vector(DATA_WIDTH - 1 downto 0);
     signal keystream_addr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
+    signal data_av_sincronizado, data_av_atual : std_logic := '0';
     
 begin
     
@@ -149,6 +150,29 @@ begin
     -- Done signal
     done <= '1' when (currentState = S1 and k >= text_size) else '0';
 
+    --sincronizador do data_av para evitar problemas de timing
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            -- se reset ativo, limpar os sinais de sincronização
+            if rst = '1' then
+                data_av_sincronizado <= '0';
+                data_av_atual <= '0';
+            else
+                -- se o sincronizado for 1 volta para o zero
+                if data_av_sincronizado = '1' then
+                    data_av_sincronizado <= '0';
+                -- se data_av mudou de 0 para 1, atualiza os sinais de sincronização
+                elsif data_av = '1' and data_av_atual = '0' then
+                    data_av_atual <= '1';
+                    data_av_sincronizado <= '1'; 
+                -- se data_av voltou para 0, atualiza o sinal de sincronização atual
+                elsif data_av = '0' then
+                    data_av_atual <= data_av;
+                end if;
+            end if;
+        end if;
+    end process;
     -- Sequential process for state transitions
     process(clk, rst)
     begin
@@ -166,7 +190,7 @@ begin
             
                 when S0 =>
                     
-                    if data_av = '1' then
+                    if data_av_sincronizado = '1' then
                         case dv is
                             when D0 =>
                                 state_addr <= data;
