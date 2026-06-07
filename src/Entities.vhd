@@ -65,26 +65,31 @@ end arch;
 
 library IEEE;
 use IEEE.std_logic_1164.all;
-
+use IEEE.numeric_std.all; -- Required for unsigned arithmetic
 
 entity FullAdder is
-    port(
-        A, B, Ci    : in std_logic;
-        S, Co       : out std_logic
+    generic (
+        WIDTH : positive := 8
+    );
+    port (
+        A     : in  std_logic_vector(WIDTH-1 downto 0);
+        B     : in  std_logic_vector(WIDTH-1 downto 0);
+        Ci    : in  std_logic;
+        S     : out std_logic_vector(WIDTH-1 downto 0);
+        Co    : out std_logic
     );
 end FullAdder;
 
-architecture arch2 of FullAdder is
-
+architecture behavioral of FullAdder is
+    signal sum_ext : unsigned(WIDTH downto 0);
 begin
+    -- Concatenate '0' to prevent overflow and include Carry In
+    sum_ext <= unsigned('0' & A) + unsigned('0' & B) + unsigned'("" & Ci);
 
-    -- Gera a soma (S)
-    S <= (A xor B) xor Ci;
-
-    -- Gera carry out (Co)
-    Co <= (A and B) or ((A xor B) and Ci);
-
-end arch2;
+    -- Split the results back into Sum and Carry Out
+    S  <= std_logic_vector(sum_ext(WIDTH-1 downto 0));
+    Co <= sum_ext(WIDTH);
+end behavioral;
 
 
 library IEEE;
@@ -101,7 +106,7 @@ entity modulo is
         modulo           : in std_logic;
         k                : in std_logic_vector(DATA_WIDTH-1 downto 0);
         mux_upper_left_b : in std_logic_vector(DATA_WIDTH-1 downto 0);
-        AdderB           : in std_logic;
+        AdderB           : in std_logic_vector(DATA_WIDTH-1 downto 0);
         mux_upper_right  : out std_logic_vector(DATA_WIDTH-1 downto 0);
         kMenorTextSize   : out std_logic;
         modPronto        : out std_logic
