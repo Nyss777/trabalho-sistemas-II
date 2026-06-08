@@ -83,6 +83,8 @@ begin
     -- Sinal de controle da memória: inverter ld porque o rw é oposto
     rw_signal <= not control_signals.ld;
     d_memory  <= data_out when control_signals.ld = '0' else (others => 'Z');
+	-- Done is produced by the control path in the structural architecture
+    done <= control_signals.done;
 end structural;
 
 architecture behavioral of GenerateKeyStream is
