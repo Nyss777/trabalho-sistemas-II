@@ -83,7 +83,6 @@ begin
     -- Sinal de controle da memória: inverter ld porque o rw é oposto
     rw_signal <= not control_signals.ld;
     d_memory  <= data_out when control_signals.ld = '0' else (others => 'Z');
-	-- Done is produced by the control path in the structural architecture
     done <= control_signals.done;
 end structural;
 
@@ -109,7 +108,7 @@ architecture behavioral of GenerateKeyStream is
     signal keystream_addr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
     signal data_av_sincronizado, data_av_atual : std_logic := '0';
 
-    signal delay_ready : std_logic := '0';
+    signal modAcionado : std_logic := '0';
 
 begin
 
@@ -162,7 +161,7 @@ begin
             k <= (others => '0');
             t <= (others => '0');
             dv <= D0;
-            delay_ready <= '0'; 
+            modAcionado <= '0'; 
 
         elsif rising_edge(clk) then
 
@@ -191,8 +190,7 @@ begin
                     -- Check if k < stateSize
                     if k < text_size then
                         currentState <= S2;
-                        ValorMod <= i + 1;
-                        delay_ready <= '0'; 
+                        modAcionado <= '1'; 
                     else
                         currentState <= S0;
 
@@ -200,8 +198,9 @@ begin
 
                 when S2 =>
                     -- i = (i + 1) % stateSize
-                    if delay_ready = '0' then
-                        delay_ready <= '1';
+                    if modAcionado = '1' then
+                        modAcionado <= '0';
+                        ValorMod <= i + 1;
                     elsif ValorMod < state_size then
                         i <= ValorMod;
                         currentState <= S3;
@@ -213,13 +212,13 @@ begin
                 when S3 =>
                     -- Read state[i] from memory
                     currentState <= S4;
-                    ValorMod <= j + mem_data_in;
-                    delay_ready <= '0'; 
+                    modAcionado <= '1'; 
                     -- mem_addr and mem_ce control the read
 
                 when S4 =>
-                    if delay_ready = '0' then
-                        delay_ready <= '1';
+                    if modAcionado = '1' then
+                        modAcionado <= '0';
+                        ValorMod <= j + mem_data_in;
                     elsif ValorMod < state_size then
                         j <= ValorMod;
                         currentState <= S5;
@@ -242,13 +241,13 @@ begin
                 when S8 =>
                     -- t to state[j]
                     currentState <= S9;
-                    ValorMod <= t + mem_data_in;
-                    delay_ready <= '0';
+                    modAcionado <= '1';
 
                 when S9 =>
                     -- t = (t + state[j]) % stateSize
-                    if delay_ready = '0' then
-                        delay_ready <= '1';
+                    if modAcionado = '1' then
+                        modAcionado <= '0';
+                        ValorMod <= t + mem_data_in;
                     elsif ValorMod < state_size then
                         t <= ValorMod;
                         currentState <= S10;
