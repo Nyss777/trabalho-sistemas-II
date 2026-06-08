@@ -16,7 +16,7 @@ architecture behavioral of GenerateKeyStream_tb is
     signal done_structural, done_behavioral : std_logic;
     signal dado : std_logic_vector(7 downto 0);
 begin
-    GENERATE_KEY_STREAM: entity work.GenerateKeyStream(structural)
+    GENERATE_KEY_STREAM_STRUCTURAL: entity work.GenerateKeyStream(structural)
         port map (
             clk     => clk,
             rst     => rst,
@@ -25,7 +25,7 @@ begin
             dado    => dado
         );
 
-    GENERATE_KEY_STREAM_A: entity work.GenerateKeyStream(behavioral)
+    GENERATE_KEY_STREAM_BEHAVIORAL: entity work.GenerateKeyStream(behavioral)
         port map (
             clk     => clk,
             rst     => rst,
