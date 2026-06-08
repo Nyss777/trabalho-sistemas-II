@@ -1,10 +1,11 @@
 -------------------------------------------------------------------------
---  Estevão, Nycolas, Breno,
---------------------------------------------------------------------------
+-- Breno, Nycolas, Estevão
+-------------------------------------------------------------------------
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.all;
+use work.GenerateKeyStream_pkg.all;
 
 entity GenerateKeyStream is
 	generic(
@@ -14,43 +15,29 @@ entity GenerateKeyStream is
 	port (
 		clk		    : in std_logic;
         rst         : in std_logic;
+        dado        : in std_logic_vector (DATA_WIDTH-1 downto 0);
 		data_av		: in std_logic;
-        done		: out std_logic;
-        data      : in std_logic_vector (DATA_WIDTH-1 downto 0)
+        done		: out std_logic
 	);
 
 end GenerateKeyStream;
 
 architecture structural of GenerateKeyStream is
-    -- Sinais para interconexão dos componentes
-    signal D_memory, Data_out, Data_in: std_logic_vector (DATA_WIDTH-1 downto 0);
-    signal data_ok, kMenorTextSize, modPronto, en_i, en_j, en_k, en_t, vetor, AcionarMod, sel, ld, A_plus, rst_bd, rw_signal: std_logic;
-    signal B_plus, Dado, indice: std_logic_vector(1 downto 0);
-    signal A: std_logic_vector(ADDR_WIDTH-1 downto 0);
+    signal d_memory, data_out, data_in: std_logic_vector (DATA_WIDTH-1 downto 0);
+    signal data_ok, k_menor_text_size, mod_pronto, rw_signal: std_logic;
+    signal memory_address: std_logic_vector(ADDR_WIDTH-1 downto 0);
+
+    signal control_signals : ControlPath_Out_Record;
 
 begin
-    -- Instanciação dos componentes
-	CONTROL_PATH: entity work.ControlPath
+	CONTROL_PATH: entity work.ControlPath(behavioral)
 		port map (
-			clk		    => clk,
-			rst		    => rst,
-            data_ok     => data_ok,
-            kMenorTextSize => kMenorTextSize,
-            modPronto   => modPronto,
-            en_i        => en_i,
-            en_j        => en_j,
-            en_k        => en_k,
-            en_t        => en_t,
-            indice      => indice,
-            AcionarMod   => AcionarMod,
-            sel         => sel,
-            ld          => ld,
-            vetor       => vetor,
-            A_plus     => A_plus,
-            B_plus     => B_plus,
-            rst_bd       => rst_bd,
-            Dado        => Dado,
-            done        => done
+			clk		          => clk,
+			rst		          => rst,
+            data_ok           => data_ok,
+            k_menor_text_size => k_menor_text_size,
+            mod_pronto        => mod_pronto,
+            control_out       => control_signals
     );
 
 	DATA_PATH: entity work.DataPath(structural)
@@ -59,30 +46,20 @@ begin
             ADDR_WIDTH  => ADDR_WIDTH
 		)
 		port map (
-			clk		    => clk,
-			rst		    => rst,
-            data_ok     => data_ok,
-            kMenorTextSize => kMenorTextSize,
-            modPronto   => modPronto,
-            en_i        => en_i,
-            en_j        => en_j,
-            en_k        => en_k,
-            en_t        => en_t,
-            indice      => indice,
-            AcionarMod   => AcionarMod,
-            vetor       => vetor,
-            A_plus     => A_plus,
-            B_plus     => B_plus,
-            rst_bd       => rst_bd,
-            Dado        => Dado,
-            Data_out    => Data_out,
-            Data_in     => Data_in,
-            Data        => data,
-            A          => A,
-            data_av     => data_av
+			clk		          => clk,
+			rst		          => rst,
+            data_ok           => data_ok,
+            k_menor_text_size => k_menor_text_size,
+            mod_pronto        => mod_pronto,
+            memory_address    => memory_address,
+            data_in           => data_in,
+            data_out          => data_out,
+            dado              => dado,
+            data_av           => data_av,
+            ctrl_in           => control_signals
         );
 
-     MEMORY: entity work.Memory
+     MEMORY: entity work.Memory(behavioral)
         generic map (
             DATA_WIDTH => DATA_WIDTH,
             ADDR_WIDTH => ADDR_WIDTH,
@@ -91,24 +68,23 @@ begin
         port map (
             clk => clk,
             rw => rw_signal,
-            ce => sel,
-            address => A,
-            data => D_memory
+            ce => control_signals.sel,
+            address => memory_address,
+            data => d_memory
         );
-       -- Registrador para segurar o valor lido na última leitura
+
     process(clk)
     begin
         if rising_edge(clk) then
-            if ld = '1' then
-                Data_in <= D_memory;
+            if control_signals.ld = '1' then
+                data_in <= d_memory;
             end if;
         end if;
     end process;
 
-    -- Sinal de controle da memória: inverter ld porque o rw é oposto (para rw 0 leitura, 1 escrita)
-    rw_signal <= not ld;
-    D_memory <= Data_out when ld = '0' else (others => 'Z');
-
+    -- Sinal de controle da memória: inverter ld porque o rw é oposto
+    rw_signal <= not control_signals.ld;
+    d_memory  <= data_out when control_signals.ld = '0' else (others => 'Z');
 end structural;
 
 architecture behavioral of GenerateKeyStream is
@@ -194,16 +170,16 @@ begin
                     if data_av_sincronizado = '1' then
                         case dv is
                             when D0 =>
-                                state_addr <= data;
+                                state_addr <= dado;
                                 dv <= D1;
                             when D1 =>
-                                state_size <= data;
+                                state_size <= dado;
                                 dv <= D2;
                             when D2 =>
-                                text_size <= data;
+                                text_size <= dado;
                                 dv <= D3;
                             when D3 =>
-                                keystream_addr <= data;
+                                keystream_addr <= dado;
                                 currentState <= S1;
                         end case;
                     end if;
