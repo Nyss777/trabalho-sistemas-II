@@ -107,6 +107,8 @@ architecture behavioral of GenerateKeyStream is
     signal keystream_addr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
     signal data_av_sincronizado, data_av_atual : std_logic := '0';
 
+    signal delay_ready : std_logic := '0';
+
 begin
 
     -- Memory control logic: set address and data based on current state
@@ -158,6 +160,7 @@ begin
             k <= (others => '0');
             t <= (others => '0');
             dv <= D0;
+            delay_ready <= '0'; 
 
         elsif rising_edge(clk) then
 
@@ -187,6 +190,7 @@ begin
                     if k < text_size then
                         currentState <= S2;
                         ValorMod <= i + 1;
+                        delay_ready <= '0'; 
                     else
                         currentState <= S0;
 
@@ -194,7 +198,9 @@ begin
 
                 when S2 =>
                     -- i = (i + 1) % stateSize
-                    if ValorMod < state_size then
+                    if delay_ready = '0' then
+                        delay_ready <= '1';
+                    elsif ValorMod < state_size then
                         i <= ValorMod;
                         currentState <= S3;
                     else
@@ -206,10 +212,13 @@ begin
                     -- Read state[i] from memory
                     currentState <= S4;
                     ValorMod <= j + mem_data_in;
+                    delay_ready <= '0'; 
                     -- mem_addr and mem_ce control the read
 
                 when S4 =>
-                    if ValorMod < state_size then
+                    if delay_ready = '0' then
+                        delay_ready <= '1';
+                    elsif ValorMod < state_size then
                         j <= ValorMod;
                         currentState <= S5;
                     else
@@ -232,10 +241,13 @@ begin
                     -- t to state[j]
                     currentState <= S9;
                     ValorMod <= t + mem_data_in;
+                    delay_ready <= '0';
 
                 when S9 =>
                     -- t = (t + state[j]) % stateSize
-                    if ValorMod < state_size then
+                    if delay_ready = '0' then
+                        delay_ready <= '1';
+                    elsif ValorMod < state_size then
                         t <= ValorMod;
                         currentState <= S10;
                     else
