@@ -56,23 +56,20 @@ architecture structural of DataPath is
 
     signal adder_a, adder_b, adder_result : STD_LOGIC_VECTOR(DATA_WIDTH-1 downto 0);
 
-    signal data_av_sync, data_av_sync_ff, data_av_sync_fff : std_logic;
-    signal data_av_pulse : std_logic;
+    signal data_av_sync : std_logic;
 begin
     process(clk, rst)
     begin
         if rst = '1' then
             data_av_sync    <= '0';
-            data_av_sync_ff <= '0';
-            data_av_sync_fff <= '0';
         elsif rising_edge(clk) then
-            data_av_sync_ff <= data_av;
-            data_av_sync    <= data_av_sync_ff;
-            data_av_sync_fff <= data_av_sync;
+            if data_av_sync = '1' then
+                data_av_sync <= '0';
+            else
+                data_av_sync <= data_av;
+            end if;
         end if;
     end process;
-
-    data_av_pulse <= data_av_sync and not data_av_sync_fff;
 
     data_index_next <= data_index + "01";
 
@@ -83,7 +80,7 @@ begin
             reset => rst,
             d     => data_index_next,
             q     => data_index,
-            ce    => data_av_pulse
+            ce    => data_av_sync
         );
 
     with data_index select
@@ -93,10 +90,10 @@ begin
                           "1000" when "11",
                           (others => '0') when others;
 
-    ce_state      <= av_decoder_out(0) and data_av_pulse and rst_bd;
-    ce_state_size <= av_decoder_out(1) and data_av_pulse and rst_bd;
-    ce_text_size  <= av_decoder_out(2) and data_av_pulse and rst_bd;
-    ce_key_stream <= av_decoder_out(3) and data_av_pulse and rst_bd;
+    ce_state      <= av_decoder_out(0) and data_av_sync and rst_bd;
+    ce_state_size <= av_decoder_out(1) and data_av_sync and rst_bd;
+    ce_text_size  <= av_decoder_out(2) and data_av_sync and rst_bd;
+    ce_key_stream <= av_decoder_out(3) and data_av_sync and rst_bd;
 
     state : entity work.RegisterNbits(behavioral)
         generic map (WIDTH => ADDR_WIDTH)
