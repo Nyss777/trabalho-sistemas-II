@@ -205,7 +205,7 @@ begin
 
     memory_address <= memory_addr_base + memory_addr_index;
 
-    adder_a <= std_logic_vector(to_unsigned(1, DATA_WIDTH)) when ctrl_in.a_plus = '0' else Data_in;
+    adder_a <= std_logic_vector(to_unsigned(1, DATA_WIDTH)) when ctrl_in.a_plus = '0' else data_in;
     with ctrl_in.b_plus select
         adder_b <= reg_i_out when "00",
                    reg_j_out when "01",

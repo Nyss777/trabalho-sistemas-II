@@ -6,7 +6,6 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 
 package GenerateKeyStream_pkg is
-
     -- Definição da record contendo os sinais do ControlPath para o DataPath
     type ControlPath_Out_Record is record
         en_i        : std_logic;                      -- Habilita escrita nos registradores
@@ -24,5 +23,4 @@ package GenerateKeyStream_pkg is
         dado        : std_logic_vector(1 downto 0);   -- Seleciona dado para registradores
         done        : std_logic;                      -- Indica operação concluída
     end record ControlPath_Out_Record;
-
 end package GenerateKeyStream_pkg;

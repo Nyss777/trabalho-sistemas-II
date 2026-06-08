@@ -19,7 +19,6 @@ entity GenerateKeyStream is
 		data_av		: in std_logic;
         done		: out std_logic
 	);
-
 end GenerateKeyStream;
 
 architecture structural of GenerateKeyStream is
@@ -28,7 +27,6 @@ architecture structural of GenerateKeyStream is
     signal memory_address: std_logic_vector(ADDR_WIDTH-1 downto 0);
 
     signal control_signals : ControlPath_Out_Record;
-
 begin
 	CONTROL_PATH: entity work.ControlPath(behavioral)
 		port map (
